@@ -2,6 +2,7 @@
 
 (require web-server/dispatch
          web-server/servlet-env
+         web-server/http/request-structs
          net/url-string
          gregor
          koyo/json)
@@ -21,7 +22,7 @@
 
 (define-values (dispatcher dispatch-url)
   (dispatch-rules
-   [("examine" (string-arg)) #:method "post" examine]))
+   [("examine") #:method "post" examine]))
 
 (define (500-responder url ex)
   (log-error (format  "[ ~a]  ~a  --->  ~a"
@@ -37,6 +38,7 @@
 
 (define (examine request)
   (response/json
-   #hash((test . #t))
-   #:code 200))
+   #hasheq((test . #t))
+   #:code 200
+   #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
 
