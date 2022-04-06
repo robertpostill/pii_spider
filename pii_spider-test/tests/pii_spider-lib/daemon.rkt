@@ -3,12 +3,14 @@
 (require racket/function
          racket/port
          racket/logging
+         racket/promise
          json
          net/url
          pii_spider/daemon
          rackunit
          mock
          mock/rackunit
+         web-server/http/request-structs
          web-server/http/response-structs
          pii_spider/structs)
 
@@ -34,14 +36,30 @@
    (test-suite
     "examine"
     (test-case "examine returns a 200 for a successful response"
-      (define mock-request (mock #:behavior (const (void))))
+      (define mock-request (make-request
+                            #"POST"                                       ; method
+                            (string->url "http://localhost:8080/examine") ; URI
+                            null                                          ; headers
+                            (delay (lambda () null))                      ; body
+                            #"{\"scanData\": \"some test data\"}"         ; POST data
+                            "127.0.0.1"                                   ; host IP
+                            80                                            ; host PORT
+                            "127.0.0.1"))                                 ; client IP
       (define result (examine mock-request))
       (check-equal? (response-code result) 200))
     (test-case "examine returns JSON for a successful response"
-      (define mock-request (mock #:behavior (const (void))))
+      (define mock-request (make-request
+                            #"POST"                                       ; method
+                            (string->url "http://localhost:8080/examine") ; URI
+                            null                                          ; headers
+                            (delay (lambda () null))                      ; body
+                            #"{\"scanData\": \"some test data\"}"         ; POST data
+                            "127.0.0.1"                                   ; host IP
+                            80                                            ; host PORT
+                            "127.0.0.1"))                                 ; client IP
       (define result (examine mock-request))
       (check-equal? (call-with-output-bytes (response-output result))
-                    (jsexpr->bytes #hash((test . #t))))))
+                    (jsexpr->bytes #hash((data . "blah") (originalData . "some test data"))))))
    (test-suite
     "404-responder"
     (test-case "404-responder returns a 404"
@@ -52,7 +70,7 @@
       (define mock-request (mock #:behavior (const (void))))
       (define result (404-responder mock-request))
       (check-equal? (call-with-output-bytes (response-output result))
-                    (jsexpr->bytes null))))
+                    (jsexpr->bytes #hash((notFound . #t))))))
 (test-suite
     "500-responder"
     (test-case "500-responder returns a status code of 500"
