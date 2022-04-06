@@ -4,8 +4,10 @@
          web-server/servlet-env
          web-server/http/request-structs
          net/url-string
+         json
          gregor
-         koyo/json)
+         koyo/json
+         "logging.rkt")
 
 (provide listen dispatcher 500-responder 404-responder examine)
 
@@ -31,14 +33,27 @@
                       (exn-message ex)))
   (response/json
    #hash((hasError . #t))
-   #:code 500))
+   #:code 500
+   #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
 
 (define (404-responder req)
-  (response/json null #:code 404))
+  (response/json
+   #hash((notFound . #t))
+   #:code 404
+   #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
 
 (define (examine request)
-  (response/json
-   #hasheq((test . #t))
-   #:code 200
-   #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
+  (define original-data (bytes->string/utf-8 (request-post-data/raw request)))
+  (log-agent-debug
+   (string-append "POSTed data: " original-data))
+  (let
+      ([req-body (string->jsexpr original-data)]
+       [result (make-hash)])
+      ;; (crawl-string )
+      (hash-set! result 'originalData (hash-ref req-body 'scanData))
+      (response/json
+       result
+       #:code 200
+       #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
+  )
 
