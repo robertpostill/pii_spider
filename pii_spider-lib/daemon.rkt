@@ -11,7 +11,7 @@
 
 (provide listen dispatcher 500-responder 404-responder examine)
 
-(define (listen #:engine [serve/servlet serve/servlet])
+(define (listen #:engine [serve/servlet serve/servlet] #:log-file [log-file "requests.log"])
   (serve/servlet
    dispatcher
    #:servlet-responder 500-responder
@@ -20,7 +20,7 @@
    #:launch-browser? #f
    #:servlet-regexp #rx""
    #:file-not-found-responder 404-responder
-   #:log-file "requests.log"))
+   #:log-file log-file))
 
 (define-values (dispatcher dispatch-url)
   (dispatch-rules
