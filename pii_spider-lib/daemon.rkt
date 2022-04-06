@@ -49,11 +49,12 @@
   (let
       ([req-body (string->jsexpr original-data)]
        [result (make-hash)])
-      ;; (crawl-string )
+
       (hash-set! result 'originalData (hash-ref req-body 'scanData))
-      (response/json
-       result
-       #:code 200
-       #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
-  )
+    (hash-set! result 'data "blah")
+    
+    (response/json
+     result
+     #:code 200
+     #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000")))))
 
