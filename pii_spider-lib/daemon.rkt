@@ -1,15 +1,18 @@
 #lang racket/base
 
-(require web-server/dispatch
+(require racket/match
+         racket/port
+         web-server/dispatch
          web-server/servlet-env
          web-server/http/request-structs
          net/url-string
          json
          gregor
          koyo/json
-         "logging.rkt")
+         "logging.rkt"
+         "crawlers/text.rkt")
 
-(provide listen dispatcher 500-responder 404-responder examine)
+(provide listen dispatcher 500-responder 404-responder 400-response examine valid-json?)
 
 (define (listen #:engine [serve/servlet serve/servlet] #:log-file [log-file "requests.log"])
   (serve/servlet
@@ -42,19 +45,35 @@
    #:code 404
    #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
 
-(define (examine request)
+(define (400-response original-data error-message)
+  (define result (make-hash))
+  (hash-set! result 'originalData original-data)
+  (hash-set! result 'message error-message)
+  (response/json
+   result
+   #:code 400
+   #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
+
+(define (examine request #:crawler [crawl crawl])
   (define original-data (bytes->string/utf-8 (request-post-data/raw request)))
   (log-agent-debug
    (string-append "POSTed data: " original-data))
-  (let
-      ([req-body (string->jsexpr original-data)]
-       [result (make-hash)])
+  (match (valid-json? original-data)
+    [#t #:when (not (hash-has-key? (string->jsexpr original-data) 'scanData)) (400-response original-data "The scanData key can't be read from this JSON")]
+    [#t (let
+            ([req-body (string->jsexpr original-data)]
+             [result (make-hash)])
+            (crawl (hash-ref req-body 'scanData))
+          (hash-set! result 'originalData (hash-ref req-body 'scanData))
+          (hash-set! result 'data "blah")
+          
+          (response/json
+           result
+           #:code 200
+           #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))]
+    [#f (400-response original-data "This data does not appear to be valid JSON")]))
 
-      (hash-set! result 'originalData (hash-ref req-body 'scanData))
-    (hash-set! result 'data "blah")
-    
-    (response/json
-     result
-     #:code 200
-     #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000")))))
+(define (valid-json? data)
+  (with-handlers ([exn:fail:read? (lambda (e) #f)])
+    (with-input-from-string data (lambda () (read-json) #t))))
 

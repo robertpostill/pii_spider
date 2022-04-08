@@ -59,7 +59,44 @@
                             "127.0.0.1"))                                 ; client IP
       (define result (examine mock-request))
       (check-equal? (call-with-output-bytes (response-output result))
-                    (jsexpr->bytes #hash((data . "blah") (originalData . "some test data"))))))
+                    (jsexpr->bytes #hash((data . "blah") (originalData . "some test data")))))
+    (test-case "examine calls the crawler with the data to be examined"
+      (define mock-crawler (mock #:behavior (const (void))))
+      (define mock-request (make-request
+                            #"POST"                                       ; method
+                            (string->url "http://localhost:8080/examine") ; URI
+                            null                                          ; headers
+                            (delay (lambda () null))                      ; body
+                            #"{\"scanData\": \"some test data\"}"         ; POST data
+                            "127.0.0.1"                                   ; host IP
+                            80                                            ; host PORT
+                            "127.0.0.1"))                                 ; client IP
+      (define result (examine mock-request #:crawler mock-crawler))
+      (check-mock-called-with? mock-crawler (arguments "some test data")))
+    (test-case "examine returns a 400 code for malformed JSON"
+      (define mock-request (make-request
+                            #"POST"                                       ; method
+                            (string->url "http://localhost:8080/examine") ; URI
+                            null                                          ; headers
+                            (delay (lambda () null))                      ; body
+                            #"{\"badKey\": \"does not matter\"}"          ; POST data
+                            "127.0.0.1"                                   ; host IP
+                            80                                            ; host PORT
+                            "127.0.0.1"))                                 ; client IP
+      (define result (examine mock-request))
+      (check-equal? (response-code result) 400))
+    (test-case "examine returns a 400 code when the data isn't JSON"
+      (define mock-request (make-request
+                            #"POST"                                       ; method
+                            (string->url "http://localhost:8080/examine") ; URI
+                            null                                          ; headers
+                            (delay (lambda () null))                      ; body
+                            #"not even JSON"                              ; POST data
+                            "127.0.0.1"                                   ; host IP
+                            80                                            ; host PORT
+                            "127.0.0.1"))                                 ; client IP
+      (define result (examine mock-request))
+      (check-equal? (response-code result) 400)))
    (test-suite
     "404-responder"
     (test-case "404-responder returns a 404"
@@ -71,7 +108,7 @@
       (define result (404-responder mock-request))
       (check-equal? (call-with-output-bytes (response-output result))
                     (jsexpr->bytes #hash((notFound . #t))))))
-(test-suite
+   (test-suite
     "500-responder"
     (test-case "500-responder returns a status code of 500"
       (define test-url (string->url "http://localhost"))
@@ -99,7 +136,34 @@
                          'error
                          #:logger test-logger)))
       (check-equal? (call-with-output-bytes (response-output result))
-                    (jsexpr->bytes #hash((hasError . #t))))))))
+                    (jsexpr->bytes #hash((hasError . #t))))))
+   (test-suite
+    "400-response"
+    (test-case "returns a 400"
+      (define test-original-data "test bad data")
+      (define test-message "this was bad test data")
+      (define result (400-response test-original-data test-message))
+      (check-equal? (response-code result) 400))
+    (test-case "returns the reason for failure"
+      (define test-original-data "test bad data")
+      (define test-message "this was bad test data")
+      (define result (400-response test-original-data test-message))
+      (check-equal? (hash-ref (bytes->jsexpr (call-with-output-bytes (response-output result))) 'message)
+                    test-message))
+    (test-case "returns the data that triggered the issue"
+      (define test-original-data "test bad data")
+      (define test-message "this was bad test data")
+      (define result (400-response test-original-data test-message))
+      (check-equal? (hash-ref (bytes->jsexpr (call-with-output-bytes (response-output result))) 'originalData)
+                    test-original-data)))
+   (test-suite
+    "valid-json?"
+    (test-case "it does not throw an exception for invalid json"
+      (check-not-exn (lambda () (valid-json? "no JSON here"))))
+    (test-case "it returns f for invalid JSON"
+      (check-false (valid-json? "not JSON, sorry")))
+    (test-case "it returns t for valid JSON"
+      (check-true (valid-json? "{\"test\": \"data\"}"))))))
 
 (module+ test
   (require rackunit/text-ui)
