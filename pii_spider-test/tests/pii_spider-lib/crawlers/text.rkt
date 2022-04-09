@@ -25,7 +25,9 @@
       (check-true (string? (examined-text-markup (crawl-text "test data" (make-hash))))))
     (test-case "returns a a list of examined strings for the results"
       (check-true (andmap examined-string? (examined-text-results (crawl-text "test data" (make-hash))))))
-    (test-case "returns HTML containing the "))))
+    (test-case "returns HTML containing the results of the scan in a wrapped <p> element"
+      (define result "<p>some text</p>")
+      (check-equal? (examined-text-markup (crawl-text "some text" (make-hash))) result)))))
 
 (module+ test
   (require rackunit/text-ui)
