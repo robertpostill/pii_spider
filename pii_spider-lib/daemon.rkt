@@ -54,7 +54,7 @@
    #:code 400
    #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))
 
-(define (examine request #:crawler [crawl crawl])
+(define (examine request #:crawler [crawl-text crawl-text])
   (define original-data (bytes->string/utf-8 (request-post-data/raw request)))
   (log-agent-debug
    (string-append "POSTed data: " original-data))
@@ -63,7 +63,7 @@
     [#t (let
             ([req-body (string->jsexpr original-data)]
              [result (make-hash)])
-            (crawl (hash-ref req-body 'scanData))
+            (crawl-text (hash-ref req-body 'scanData) (make-hash))
           (hash-set! result 'originalData (hash-ref req-body 'scanData))
           (hash-set! result 'data "blah")
           

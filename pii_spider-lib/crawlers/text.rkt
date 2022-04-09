@@ -1,5 +1,12 @@
 #lang racket/base
 
-(provide crawl)
+(require "../structs.rkt"
+         "../pii/rules.rkt"
+         gregor)
 
-(define (crawl text) #t)
+(provide crawl-text)
+
+(define (crawl-text text settings)
+  (define started-at (now/moment))
+  (define result "")
+  (examined-text result null started-at (now/moment)))

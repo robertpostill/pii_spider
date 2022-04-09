@@ -3,6 +3,7 @@
 (require racket/struct)
 
 (provide (struct-out examined-row) (struct-out examined-table) (struct-out ignore)
+         (struct-out examined-text) (struct-out examined-string)
          (struct-out exn:fail:pii-spider) (struct-out exn:fail:pii-spider:db-connection))
 
 (struct examined-row (id results)
@@ -20,7 +21,8 @@
       (lambda (obj) (list (examined-table-name obj)
                           (examined-table-row-count obj)
                           (examined-table-end-time obj)
-                          (examined-table-ignored obj)))))]) 
+                          (examined-table-ignored obj)))))])
+
 (struct ignore (tables columns rows)
   #:methods gen:custom-write
   [(define write-proc
@@ -29,6 +31,25 @@
       (lambda (obj) (list (ignore-tables obj)
                           (ignore-columns obj)
                           (ignore-rows obj)))))])
+
+(struct examined-text (markup results start-time end-time)
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (lambda (obj) 'examined-text)
+      (lambda (obj) (list (examined-text-markup obj)
+                          (examined-text-results obj)
+                          (examined-text-end-time obj)
+                          (examined-text-start-time obj)))))])
+
+(struct examined-string (id rule matched-data)
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (lambda (obj) 'examined-text)
+      (lambda (obj) (list (examined-string-id obj)
+                          (examined-string-rule obj)
+                          (examined-string-matched-data obj)))))])
 
 (struct exn:fail:pii-spider exn:fail ())
 (struct exn:fail:pii-spider:db-connection exn:fail:pii-spider ())

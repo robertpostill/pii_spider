@@ -72,7 +72,7 @@
                             80                                            ; host PORT
                             "127.0.0.1"))                                 ; client IP
       (define result (examine mock-request #:crawler mock-crawler))
-      (check-mock-called-with? mock-crawler (arguments "some test data")))
+      (check-mock-called-with? mock-crawler (arguments "some test data" (make-hash))))
     (test-case "examine returns a 400 code for malformed JSON"
       (define mock-request (make-request
                             #"POST"                                       ; method
