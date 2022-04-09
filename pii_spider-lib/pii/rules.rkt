@@ -3,7 +3,7 @@
 (require racket/match)
 (require racket/string)
 
-(provide email au-phone-number credit-card au-tax-file-number password)
+(provide email au-phone-number credit-card au-tax-file-number password all-rules)
 
 ;; TODO have this maybe with levels of expense for deeper checking i.e. level 1 - regexp level 2 - domain check level 3 - test email
 (define (email candidate)
@@ -61,3 +61,4 @@
       (list "password" (regexp-match? simple-regex candidate))
       (list "password" #f)))
 
+(define all-rules (list email password credit-card au-tax-file-number au-phone-number))

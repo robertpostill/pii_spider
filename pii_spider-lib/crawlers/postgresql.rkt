@@ -118,7 +118,7 @@
   ;; I get later
   (define start-time (now/moment))
   (define row-count (estimate-row-count connection table-name))
-  (define rules (list rules:email rules:au-phone-number rules:credit-card rules:au-tax-file-number))
+  (define rules rules:all-rules)
   ;; only examine the rows if the table is NOT ignored
   (define rows (if (member table-name (ignore-tables ignores))
                    null
@@ -154,7 +154,7 @@
     (mock-reset! row-examiner-mock)
     (examine-table connector-mock (ignore '("foo") (hasheq) (hasheq)) "foo" #:row-function row-mock
                    #:row-estimate row-count-mock #:row-examiner row-examiner-mock)
-    (check-mock-calls row-examiner-mock (list (arguments null (list rules:email rules:au-phone-number rules:credit-card rules:au-tax-file-number)))))
+    (check-mock-calls row-examiner-mock (list (arguments null rules:all-rules))))
   
   (test-case "examine-table returns an examined-table struct with appropriate values"
     (define result (examine-table connector-mock empty-ignore "foo" #:row-function row-mock #:row-estimate row-count-mock #:row-examiner row-examiner-mock))
