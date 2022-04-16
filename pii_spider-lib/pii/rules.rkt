@@ -1,22 +1,29 @@
 #lang racket/base
 
-(require racket/match)
-(require racket/string)
+(require racket/match
+         racket/string
+         "../structs.rkt")
 
 (provide email au-phone-number credit-card au-tax-file-number password all-rules)
 
 ;; TODO have this maybe with levels of expense for deeper checking i.e. level 1 - regexp level 2 - domain check level 3 - test email
 (define (email candidate)
+  (define rule-name "Email Address")
   (define simple-email-regex (pregexp "\\S+@\\S+\\.\\S+"))
-  (if (string? candidate)
-      (list "email address" (regexp-match? simple-email-regex candidate))
-      (list "email address" #f)))
+  (match candidate
+    [(pregexp simple-email-regex)
+     (examined-data null null rule-name (car (regexp-match
+                                                    simple-email-regex candidate)) null #t)]
+    [_ (examined-data null null rule-name null null #f)]))
 
 (define (au-phone-number candidate)
+  (define rule-name "AU Phone Number")
   (define simple-regex #px"[+61|0]\\d{3}\\s?\\d{3}\\s?\\d{3}")
-  (if (string? candidate)
-      (list "AU phone number" (regexp-match? simple-regex candidate))
-      (list "AU phone number" #f)))
+  (match candidate
+    [(pregexp simple-regex)
+     (examined-data null null rule-name (car (regexp-match
+                                                      simple-regex candidate)) null #t)]
+    [_ (examined-data null null rule-name null null #f)]))
 
 ;; Check this handy helper for more CC number formats
 ;; https://en.wikipedia.org/wiki/Payment_card_number
@@ -27,17 +34,24 @@
 ;; TODO handle more card issuers
 ;; TODO validate the card numbers more thoroughly
 (define (credit-card candidate)
+  (define rule-name "Credit Card")
   (define visa-mc-regex (pregexp "[452]\\d{3}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}"))
   (define amex-regex (pregexp "3[47]\\d{2}[\\s-]?\\d{6}[\\s-]?\\d{5}"))
-  (if (string? candidate)
-      (list "Credit Card" (or (regexp-match? visa-mc-regex candidate)
-                              (regexp-match? amex-regex candidate)))
-      (list "Credit Card" #f)))
+  (match candidate
+    [(pregexp visa-mc-regex) 
+     (examined-data null null rule-name (car (regexp-match visa-mc-regex candidate)) null #t)]
+    [(pregexp amex-regex)
+     (examined-data null null rule-name (car (regexp-match amex-regex candidate)) null #t)]
+    [_ (examined-data null null rule-name null null #f)]))
 
 (define (au-tax-file-number candidate)
-  (if (string? candidate)
-      (list "AU Tax File Number" (validate-tfn candidate))
-      (list "AU Tax File Number" #f)))
+  (define rule-name "AU Tax File Number")
+  (define tfn-regex (pregexp "(\\d{3})\\s?(\\d{3})\\s?(\\d{3})"))
+  (match candidate
+    [(pregexp tfn-regex) #:when (validate-tfn candidate)
+     (examined-data null null rule-name (car (regexp-match
+                                              tfn-regex candidate)) null #t)]
+    [_ (examined-data null null rule-name null null #f)]))
 
 ;; see https://www.clearwater.com.au/code/tfn for the procedure used to calculate this
 (define (validate-tfn candidate)
@@ -56,9 +70,12 @@
 ;; TODO have a go at medicare
 
 (define (password candidate)
-  (define simple-regex #px"password[:]?[\\s]+")
-  (if (string? candidate)
-      (list "password" (regexp-match? simple-regex candidate))
-      (list "password" #f)))
+  (define rule-name "Password")
+  (define simple-regex #px"password[:]?[\\s]+(.*)")
+  (match candidate
+    [(pregexp simple-regex)
+     (examined-data null null rule-name (cadr (regexp-match
+                                              simple-regex candidate)) null #t)]
+    [_ (examined-data null null rule-name null null #f)]))
 
 (define all-rules (list email password credit-card au-tax-file-number au-phone-number))

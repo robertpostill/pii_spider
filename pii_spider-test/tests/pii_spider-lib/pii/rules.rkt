@@ -1,7 +1,8 @@
 #lang racket/base
 
 (require rackunit
-         pii_spider/pii/rules)
+         pii_spider/pii/rules
+         pii_spider/structs)
 
 (provide rules-tests)
 
@@ -10,78 +11,103 @@
    "rules"
    (test-suite
     "email"
+    (test-case "returns an examined-data struct"
+      (check-true (examined-data? (email "test"))))
     (test-case "returns the rule name"
-      (check-equal? (car (email "test")) "email address"))
+      (check-equal? (examined-data-rule (email "test")) "Email Address"))
     (test-case "returns #t for an email address"
-      (check-true (cadr (email "robert@test.com"))))
+      (check-true (examined-data-rule-triggered (email "robert@test.com"))))
+    (test-case "returns the matched data for an email address"
+      (check-equal? (examined-data-matched-data (email "robert@test.com")) "robert@test.com"))
     (test-case "returns #t for an email address inside a string"
-      (check-true (cadr (email "the string is about robert@test.com being tested"))))
+      (check-true (examined-data-rule-triggered
+                   (email "the string is about robert@test.com being tested"))))
     (test-case "returns #f when not an email address"
-      (check-false (cadr (email "test"))))
+      (check-false (examined-data-rule-triggered (email "test"))))
     (test-case "returns #f when not a string"
-      (check-false (cadr (email 1)))))
+      (check-false (examined-data-rule-triggered (email 1)))))
+   
    (test-suite
     "au-phone-number"
+    (test-case "returns an examined-data struct"
+      (check-true (examined-data? (au-phone-number "test"))))
     (test-case "returns the rule name"
-      (check-equal? (car (au-phone-number "test")) "AU phone number"))
+      (check-equal? (examined-data-rule (au-phone-number "test")) "AU Phone Number"))
+    (test-case "returns the matched data for an email address"
+      (check-equal? (examined-data-matched-data (au-phone-number "0412345678")) "0412345678"))
     (test-case "returns #t for an AU phone number"
-      (check-true (cadr (au-phone-number "0412345678"))))
+      (check-true (examined-data-rule-triggered (au-phone-number "0412345678"))))
     (test-case "returns #t for an AU phone number with country prefix"
-      (check-true (cadr (au-phone-number "+61412345678"))))
+      (check-true (examined-data-rule-triggered (au-phone-number "+61412345678"))))
     (test-case "returns #t for an AU phone number with spaces"
-      (check-true (cadr (au-phone-number "0412 345 678")))
-      (check-true (cadr (au-phone-number "0412 345678"))))
+      (check-true (examined-data-rule-triggered (au-phone-number "0412 345 678")))
+      (check-true (examined-data-rule-triggered (au-phone-number "0412 345678"))))
     (test-case "returns #t for an AU phone number inside a larger string"
-      (check-true (cadr (au-phone-number "we should ring 0412 345 678")))
-      (check-true (cadr (au-phone-number "0412 345678 is a nice phone number")))) 
+      (check-true (examined-data-rule-triggered (au-phone-number "we should ring 0412 345 678")))
+      (check-true (examined-data-rule-triggered
+                   (au-phone-number "0412 345678 is a nice phone number")))) 
     (test-case "returns #f when not an AU phone number"
-      (check-false (cadr (au-phone-number "test"))))
+      (check-false (examined-data-rule-triggered (au-phone-number "test"))))
     (test-case "returns #f when not a string"
-      (check-false (cadr (au-phone-number 1)))))
+      (check-false (examined-data-rule-triggered (au-phone-number 1)))))
+   
    (test-suite
     "credit-card"
+    (test-case "returns an examined-data struct"
+          (check-true (examined-data? (credit-card "test"))))
+    (test-case "returns the matched data for a credit card"
+      (check-equal? (examined-data-matched-data
+                     (credit-card "4111111111111111")) "4111111111111111"))
     (test-case "returns the rule name"
-      (check-equal? (car (credit-card "test")) "Credit Card"))
+      (check-equal? (examined-data-rule (credit-card "test")) "Credit Card"))
     (test-case "returns #t for a valid visa card number"
-      (check-true (cadr (credit-card "4111111111111111"))))
+      (check-true (examined-data-rule-triggered (credit-card "4111111111111111"))))
     (test-case "returns #t for a valid visa card number with spaces"
-      (check-true (cadr (credit-card "4111 1111 1111 1111"))))
+      (check-true (examined-data-rule-triggered (credit-card "4111 1111 1111 1111"))))
     (test-case "returns #t for a valid visa card number with spaces inside a string"
-      (check-true (cadr (credit-card "a credit card called 4111 1111 1111 1111 is hidden here"))))
+      (check-true (examined-data-rule-triggered
+                   (credit-card "a credit card called 4111 1111 1111 1111 is hidden here"))))
     (test-case "returns #t for a valid visa card number with hyphens"
-      (check-true (cadr (credit-card "4111-1111-1111-1111"))))
+      (check-true (examined-data-rule-triggered (credit-card "4111-1111-1111-1111"))))
     (test-case "returns #t for a valid visa card number with spaces and hypens"
-      (check-true (cadr (credit-card "4111 1111-1111 1111"))))
+      (check-true (examined-data-rule-triggered (credit-card "4111 1111-1111 1111"))))
     (test-case "returns #t for a valid amex card number"
-      (check-true (cadr (credit-card "371238839571772"))))
+      (check-true (examined-data-rule-triggered (credit-card "371238839571772"))))
     (test-case "returns #t for a valid amex card number with spaces"
-      (check-true (cadr (credit-card "3712 388395 71772"))))
+      (check-true (examined-data-rule-triggered (credit-card "3712 388395 71772"))))
     (test-case "returns #f when not a credit card number"
-      (check-false (cadr (credit-card "test")))))
+      (check-false (examined-data-rule-triggered (credit-card "test")))))
    (test-suite
     "au-tax-file-number"
+    (test-case "returns an examined-data struct"
+          (check-true (examined-data? (au-tax-file-number "test"))))
+    (test-case "returns the matched data for a TFN"
+      (check-equal? (examined-data-matched-data
+                     (au-tax-file-number "123456782")) "123456782"))
     (test-case "returns the rule name"
-      (check-equal? (car (au-tax-file-number "test")) "AU Tax File Number"))
+      (check-equal? (examined-data-rule (au-tax-file-number "test")) "AU Tax File Number"))
     (test-case "returns #f when not a AU tax file number"
-      (check-false (cadr (au-tax-file-number "test"))))
+      (check-false (examined-data-rule-triggered (au-tax-file-number "test"))))
     (test-case "returns #t for a valid AU TFN"
-      (check-true (cadr (au-tax-file-number "123456782"))))
+      (check-true (examined-data-rule-triggered (au-tax-file-number "123456782"))))
     (test-case "returns #t for a valid AU TFN with spaces"
-      (check-true (cadr (au-tax-file-number "123 456 782")))))
-   (test-suite
-    "au-tax-file-number"
-    (test-case "returns #t for a valid AU TFN"
-      (check-true (cadr (au-tax-file-number "123456782"))))
+      (check-true (examined-data-rule-triggered (au-tax-file-number "123 456 782"))))
     (test-case "returns #f for an invalid AU TFN"
-      (check-false (cadr (au-tax-file-number "123456789")))))
+      (check-false (examined-data-rule-triggered (au-tax-file-number "123456789")))))
+   
    (test-suite
     "password"
+    (test-case "returns an examined-data struct"
+          (check-true (examined-data? (password "test"))))
+    (test-case "returns the matched data for a TFN"
+      (check-equal? (examined-data-matched-data
+                     (password "password: password123")) "password123"))
     (test-case "returns the rule name"
-      (check-equal? (car (password "test")) "password"))
+      (check-equal? (examined-data-rule (password "test")) "Password"))
     (test-case "returns #f when not a likely password"
-      (check-false (cadr (password "test"))))
+      (check-false (examined-data-rule-triggered (password "test"))))
     (test-case "returns #t for a likely password preceeded by the word password"
-      (check-true (cadr (password "password: passw0rd")))))))
+      (check-true (examined-data-rule-triggered (password "password: passw0rd")))))))
 
 (module+ test
   (require rackunit/text-ui)

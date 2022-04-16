@@ -3,7 +3,7 @@
 (require racket/struct)
 
 (provide (struct-out examined-row) (struct-out examined-table) (struct-out ignore)
-         (struct-out examined-text) (struct-out examined-string)
+         (struct-out examined-text) (struct-out examined-data)
          (struct-out exn:fail:pii-spider) (struct-out exn:fail:pii-spider:db-connection))
 
 (struct examined-row (id results)
@@ -42,14 +42,15 @@
                           (examined-text-end-time obj)
                           (examined-text-start-time obj)))))])
 
-(struct examined-string (id rule matched-data)
+(struct examined-data (id reference rule matched-data consumed-character-count rule-triggered)
   #:methods gen:custom-write
   [(define write-proc
      (make-constructor-style-printer
       (lambda (obj) 'examined-text)
-      (lambda (obj) (list (examined-string-id obj)
-                          (examined-string-rule obj)
-                          (examined-string-matched-data obj)))))])
+      (lambda (obj) (list (examined-data-id obj)
+                          (examined-data-rule obj)
+                          (examined-data-matched-data obj)))))])
+
 
 (struct exn:fail:pii-spider exn:fail ())
 (struct exn:fail:pii-spider:db-connection exn:fail:pii-spider ())
