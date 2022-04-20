@@ -265,9 +265,9 @@
 (define (crawl-for-pii row rule)
   (let ([row-results  (vector-map rule row)])
     (foldl (lambda (column-result result)
-             (if (cadr column-result)
-                 (list (add1 (car result)) (car column-result) )
-                 (list (car result) (car column-result) )))
+             (if (examined-data-rule-triggered column-result)
+                 (list (add1 (car result)) (examined-data-rule column-result) )
+                 (list (car result) (examined-data-rule column-result) )))
            '(0 "")
            (vector->list row-results))))
 
@@ -275,18 +275,18 @@
   (define row-result #(1 "user@example.com"))
   
   (test-case "crawl-for-pii run rules over each row looking for PII"
-    (define rule-mock (mock #:behavior (const '("email adddress" #f))))
+    (define rule-mock (mock #:behavior (const (examined-data null null "email adddress" null null #f))))
     (crawl-for-pii row-result rule-mock)
     (check-mock-called-with? rule-mock (arguments (vector-ref row-result 0)))
     (check-mock-called-with? rule-mock (arguments (vector-ref row-result 1))))
   (test-case "crawl-for-pii returns a count of the PII instances detected"
-    (define rule-mock (mock #:behavior (const '("email address" #t))))
+    (define rule-mock (mock #:behavior (const (examined-data null null "email address" null null #t))))
     (check-equal? (car (crawl-for-pii row-result rule-mock)) 2))
   (test-case "crawl-for-pii returns the name of the rule when PII is detected"
-    (define rule-mock (mock #:behavior (const '("email address" #t))))
+    (define rule-mock (mock #:behavior (const (examined-data null null "email address" null null #t))))
     (check-equal? (cadr (crawl-for-pii row-result rule-mock)) "email address"))
   (test-case "crawl-for-pii returns an count of 0 when no PII is detected"
-    (define rule-mock (mock #:behavior (const '("email address" #f))))
+    (define rule-mock (mock #:behavior (const (examined-data null null "email address" null null #f))))
     (check-equal? (cadr (crawl-for-pii row-result rule-mock)) "email address")))
 
 

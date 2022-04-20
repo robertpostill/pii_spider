@@ -54,7 +54,7 @@
    (test-suite
     "credit-card"
     (test-case "returns an examined-data struct"
-          (check-true (examined-data? (credit-card "test"))))
+      (check-true (examined-data? (credit-card "test"))))
     (test-case "returns the matched data for a credit card"
       (check-equal? (examined-data-matched-data
                      (credit-card "4111111111111111")) "4111111111111111"))
@@ -77,10 +77,11 @@
       (check-true (examined-data-rule-triggered (credit-card "3712 388395 71772"))))
     (test-case "returns #f when not a credit card number"
       (check-false (examined-data-rule-triggered (credit-card "test")))))
+   
    (test-suite
     "au-tax-file-number"
     (test-case "returns an examined-data struct"
-          (check-true (examined-data? (au-tax-file-number "test"))))
+      (check-true (examined-data? (au-tax-file-number "test"))))
     (test-case "returns the matched data for a TFN"
       (check-equal? (examined-data-matched-data
                      (au-tax-file-number "123456782")) "123456782"))
@@ -98,7 +99,7 @@
    (test-suite
     "password"
     (test-case "returns an examined-data struct"
-          (check-true (examined-data? (password "test"))))
+      (check-true (examined-data? (password "test"))))
     (test-case "returns the matched data for a TFN"
       (check-equal? (examined-data-matched-data
                      (password "password: password123")) "password123"))
