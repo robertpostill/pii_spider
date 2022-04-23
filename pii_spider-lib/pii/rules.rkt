@@ -18,11 +18,18 @@
 
 (define (au-phone-number candidate)
   (define rule-name "AU Phone Number")
-  (define simple-regex #px"[+61|0]\\d{3}\\s?\\d{3}\\s?\\d{3}")
+  (define local-regex #px"\\b0[1234578]\\d{2}\\s?\\d{3}\\s?\\d{3}\\b")
+  ; ideally this would have a \\b in front but that seems to cause a bug
+  ;; see https://github.com/racket/racket/issues/4213
+  (define international-regex #px"\\+61[1234578]\\d{2}\\s?\\d{3}\\s?\\d{3}\\b") 
+  
   (match candidate
-    [(pregexp simple-regex)
+    [(pregexp local-regex)
      (examined-data null null rule-name (car (regexp-match
-                                                      simple-regex candidate)) null #t)]
+                                              local-regex candidate)) null #t)]
+    [(pregexp international-regex)
+     (examined-data null null rule-name (car (regexp-match
+                                              international-regex candidate)) null #t)]
     [_ (examined-data null null rule-name null null #f)]))
 
 ;; Check this handy helper for more CC number formats
@@ -46,26 +53,31 @@
 
 (define (au-tax-file-number candidate)
   (define rule-name "AU Tax File Number")
-  (define tfn-regex (pregexp "(\\d{3})\\s?(\\d{3})\\s?(\\d{3})"))
+  (define tfn-regex (pregexp "\\b(\\d{3})\\s?(\\d{3})\\s?(\\d{3})\\b"))
   (match candidate
-    [(pregexp tfn-regex) #:when (validate-tfn candidate)
+    [(pregexp tfn-regex) #:when (valid-tfn? candidate)
      (examined-data null null rule-name (car (regexp-match
                                               tfn-regex candidate)) null #t)]
     [_ (examined-data null null rule-name null null #f)]))
 
 ;; see https://www.clearwater.com.au/code/tfn for the procedure used to calculate this
-(define (validate-tfn candidate)
+;;;  NB there are special TFNs see https://support.yourpayroll.com.au/hc/en-au/articles/200077535-Special-Tax-File-Numbers
+(define (valid-tfn? candidate)
   (define tfn-regex (pregexp "(\\d{3})\\s?(\\d{3})\\s?(\\d{3})"))
   (define magic-weights '(1 4 3 7 5 8 6 9 10))
   (define 0-code (char->integer #\0))
-  (match candidate
-    [(pregexp tfn-regex (cons _ (app string-append* s)))
-     (zero? (remainder
-             (for/sum ([c (in-string s)]
-                       [w (in-list magic-weights)])
-               (* (- (char->integer c) 0-code) w))
-             11))]
-    [_ #f]))
+  (define result  (match candidate
+                    [(pregexp "111\\s?111\\s?111") #t]
+                    [(pregexp "333\\s?333\\s?333") #t]
+                    [(pregexp "444\\s?444\\s?444") #t]
+                    [(pregexp tfn-regex (cons _ (app string-append* s)))
+                     (zero? (remainder
+                             (for/sum ([c (in-string s)]
+                                       [w (in-list magic-weights)])
+                               (* (- (char->integer c) 0-code) w))
+                             11))]
+                    [_ #f]))
+  result)
 
 ;; TODO have a go at medicare
 

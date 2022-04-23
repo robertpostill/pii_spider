@@ -46,10 +46,12 @@
       (check-true (examined-data-rule-triggered (au-phone-number "we should ring 0412 345 678")))
       (check-true (examined-data-rule-triggered
                    (au-phone-number "0412 345678 is a nice phone number")))) 
-    (test-case "returns #f when not an AU phone number"
+    (test-case "returns #f when not a phone number"
       (check-false (examined-data-rule-triggered (au-phone-number "test"))))
     (test-case "returns #f when not a string"
-      (check-false (examined-data-rule-triggered (au-phone-number 1)))))
+      (check-false (examined-data-rule-triggered (au-phone-number 1))))
+    (test-case "returns #f when it is a larger number"
+      (check-false (examined-data-rule-triggered (au-phone-number "01234567890")))))
    
    (test-suite
     "credit-card"
@@ -91,10 +93,20 @@
       (check-false (examined-data-rule-triggered (au-tax-file-number "test"))))
     (test-case "returns #t for a valid AU TFN"
       (check-true (examined-data-rule-triggered (au-tax-file-number "123456782"))))
+    (test-case "returns #t for the special AU TFN indicating no TFN"
+      (check-true (examined-data-rule-triggered (au-tax-file-number "000000000"))))
+    (test-case "returns #t for the special AU TFN indicating invalid TFN"
+      (check-true (examined-data-rule-triggered (au-tax-file-number "111111111"))))
+    (test-case "returns #t for the special AU TFN indicating under 18 or low earner TFN"
+      (check-true (examined-data-rule-triggered (au-tax-file-number "333333333"))))
+    (test-case "returns #t for the special AU TFN indicating exempt from TFN"
+      (check-true (examined-data-rule-triggered (au-tax-file-number "444444444"))))
     (test-case "returns #t for a valid AU TFN with spaces"
       (check-true (examined-data-rule-triggered (au-tax-file-number "123 456 782"))))
     (test-case "returns #f for an invalid AU TFN"
-      (check-false (examined-data-rule-triggered (au-tax-file-number "123456789")))))
+      (check-false (examined-data-rule-triggered (au-tax-file-number "123456789"))))
+    (test-case "returns #f for an invalid AU TFN"
+      (check-false (examined-data-rule-triggered (au-tax-file-number "12345678234")))))
    
    (test-suite
     "password"
