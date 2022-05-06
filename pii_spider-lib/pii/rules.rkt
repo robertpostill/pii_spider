@@ -12,24 +12,25 @@
   (define simple-email-regex (pregexp "\\S+@\\S+\\.\\S+"))
   (match candidate
     [(pregexp simple-email-regex)
-     (examined-data null null rule-name (car (regexp-match
-                                                    simple-email-regex candidate)) null #t)]
+     (examined-data null null rule-name (regexp-match*
+                                               simple-email-regex candidate) null #t)]
     [_ (examined-data null null rule-name null null #f)]))
 
+;; it occurs to me that this is going to be a problem 
 (define (au-phone-number candidate)
   (define rule-name "AU Phone Number")
   (define local-regex #px"\\b0[1234578]\\d{2}\\s?\\d{3}\\s?\\d{3}\\b")
   ; ideally this would have a \\b in front but that seems to cause a bug
   ;; see https://github.com/racket/racket/issues/4213
-  (define international-regex #px"\\+61[1234578]\\d{2}\\s?\\d{3}\\s?\\d{3}\\b") 
+  (define international-regex #px"\\+61\\s?[1234578]\\d{2}\\s?\\d{3}\\s?\\d{3}\\b") 
   
   (match candidate
     [(pregexp local-regex)
-     (examined-data null null rule-name (car (regexp-match
-                                              local-regex candidate)) null #t)]
+     (examined-data null null rule-name (regexp-match*
+                                               local-regex candidate) null #t)]
     [(pregexp international-regex)
-     (examined-data null null rule-name (car (regexp-match
-                                              international-regex candidate)) null #t)]
+     (examined-data null null rule-name (regexp-match*
+                                               international-regex candidate) null #t)]
     [_ (examined-data null null rule-name null null #f)]))
 
 ;; Check this handy helper for more CC number formats
@@ -46,9 +47,9 @@
   (define amex-regex (pregexp "3[47]\\d{2}[\\s-]?\\d{6}[\\s-]?\\d{5}"))
   (match candidate
     [(pregexp visa-mc-regex) 
-     (examined-data null null rule-name (car (regexp-match visa-mc-regex candidate)) null #t)]
+     (examined-data null null rule-name (regexp-match* visa-mc-regex candidate) null #t)]
     [(pregexp amex-regex)
-     (examined-data null null rule-name (car (regexp-match amex-regex candidate)) null #t)]
+     (examined-data null null rule-name (regexp-match* amex-regex candidate) null #t)]
     [_ (examined-data null null rule-name null null #f)]))
 
 (define (au-tax-file-number candidate)
@@ -56,8 +57,8 @@
   (define tfn-regex (pregexp "\\b(\\d{3})\\s?(\\d{3})\\s?(\\d{3})\\b"))
   (match candidate
     [(pregexp tfn-regex) #:when (valid-tfn? candidate)
-     (examined-data null null rule-name (car (regexp-match
-                                              tfn-regex candidate)) null #t)]
+                         (examined-data null null rule-name (filter valid-tfn? (regexp-match*
+                                                                                tfn-regex candidate)) null #t)]
     [_ (examined-data null null rule-name null null #f)]))
 
 ;; see https://www.clearwater.com.au/code/tfn for the procedure used to calculate this
@@ -83,11 +84,16 @@
 
 (define (password candidate)
   (define rule-name "Password")
-  (define simple-regex #px"password[:]?[\\s]+(.*)")
+  (define simple-regex #px"\\b(password[:]?[\\s]+)(\\S*)\\b")
   (match candidate
     [(pregexp simple-regex)
-     (examined-data null null rule-name (cadr (regexp-match
-                                              simple-regex candidate)) null #t)]
+     (examined-data null null rule-name (pluck-passwords
+                                                simple-regex candidate) null #t)]
     [_ (examined-data null null rule-name null null #f)]))
+
+(define (pluck-passwords regex candidate)
+  (map (lambda (matched-data)
+         (regexp-replace (pregexp "password[:]?[\\s]+") matched-data ""))
+       (regexp-match* regex candidate)))
 
 (define all-rules (list email password credit-card au-tax-file-number au-phone-number))

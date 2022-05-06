@@ -32,13 +32,13 @@
                           (ignore-columns obj)
                           (ignore-rows obj)))))])
 
-(struct examined-text (markup results start-time end-time)
+(struct examined-text (markup triggered-rules rules-applied start-time end-time)
   #:methods gen:custom-write
   [(define write-proc
      (make-constructor-style-printer
       (lambda (obj) 'examined-text)
       (lambda (obj) (list (examined-text-markup obj)
-                          (examined-text-results obj)
+                          (examined-text-triggered-rules obj)
                           (examined-text-end-time obj)
                           (examined-text-start-time obj)))))])
 
