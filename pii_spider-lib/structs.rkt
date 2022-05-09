@@ -46,10 +46,11 @@
   #:methods gen:custom-write
   [(define write-proc
      (make-constructor-style-printer
-      (lambda (obj) 'examined-text)
+      (lambda (obj) 'examined-data)
       (lambda (obj) (list (examined-data-id obj)
                           (examined-data-rule obj)
-                          (examined-data-matched-data obj)))))])
+                          (examined-data-matched-data obj)
+                          (examined-data-rule-triggered obj)))))])
 
 
 (struct exn:fail:pii-spider exn:fail ())
