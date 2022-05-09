@@ -13,8 +13,8 @@
   (match candidate
     [(pregexp simple-email-regex)
      (examined-data null null rule-name (regexp-match*
-                                               simple-email-regex candidate) null #t)]
-    [_ (examined-data null null rule-name null null #f)]))
+                                               simple-email-regex candidate) #t)]
+    [_ (examined-data null null rule-name null #f)]))
 
 ;; it occurs to me that this is going to be a problem 
 (define (au-phone-number candidate)
@@ -27,11 +27,11 @@
   (match candidate
     [(pregexp local-regex)
      (examined-data null null rule-name (regexp-match*
-                                               local-regex candidate) null #t)]
+                                               local-regex candidate) #t)]
     [(pregexp international-regex)
      (examined-data null null rule-name (regexp-match*
-                                               international-regex candidate) null #t)]
-    [_ (examined-data null null rule-name null null #f)]))
+                                               international-regex candidate) #t)]
+    [_ (examined-data null null rule-name null #f)]))
 
 ;; Check this handy helper for more CC number formats
 ;; https://en.wikipedia.org/wiki/Payment_card_number
@@ -47,10 +47,10 @@
   (define amex-regex (pregexp "3[47]\\d{2}[\\s-]?\\d{6}[\\s-]?\\d{5}"))
   (match candidate
     [(pregexp visa-mc-regex) 
-     (examined-data null null rule-name (regexp-match* visa-mc-regex candidate) null #t)]
+     (examined-data null null rule-name (regexp-match* visa-mc-regex candidate) #t)]
     [(pregexp amex-regex)
-     (examined-data null null rule-name (regexp-match* amex-regex candidate) null #t)]
-    [_ (examined-data null null rule-name null null #f)]))
+     (examined-data null null rule-name (regexp-match* amex-regex candidate) #t)]
+    [_ (examined-data null null rule-name null #f)]))
 
 (define (au-tax-file-number candidate)
   (define rule-name "AU Tax File Number")
@@ -58,8 +58,8 @@
   (match candidate
     [(pregexp tfn-regex) #:when (valid-tfn? candidate)
                          (examined-data null null rule-name (filter valid-tfn? (regexp-match*
-                                                                                tfn-regex candidate)) null #t)]
-    [_ (examined-data null null rule-name null null #f)]))
+                                                                                tfn-regex candidate))#t)]
+    [_ (examined-data null null rule-name null #f)]))
 
 ;; see https://www.clearwater.com.au/code/tfn for the procedure used to calculate this
 ;;;  NB there are special TFNs see https://support.yourpayroll.com.au/hc/en-au/articles/200077535-Special-Tax-File-Numbers
@@ -88,8 +88,8 @@
   (match candidate
     [(pregexp simple-regex)
      (examined-data null null rule-name (pluck-passwords
-                                                simple-regex candidate) null #t)]
-    [_ (examined-data null null rule-name null null #f)]))
+                                                simple-regex candidate) #t)]
+    [_ (examined-data null null rule-name null #f)]))
 
 (define (pluck-passwords regex candidate)
   (map (lambda (matched-data)
