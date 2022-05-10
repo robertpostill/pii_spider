@@ -5,7 +5,8 @@
 (define deps '("base"
                "gregor"
                "txexpr"
-               "koyo-lib"))
+               "koyo-lib"
+               "uuid"))
 (define build-deps '())
 (define clean '("compiled" "private/compiled"))
 (define pkg-authors '(robertpostill))
