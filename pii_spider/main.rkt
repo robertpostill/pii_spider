@@ -1,8 +1,9 @@
 #lang racket/base
 
-(require racket/cmdline)
-(require racket/exn)
-(require pii_spider)
+(require racket/cmdline
+         racket/exn
+         pii_spider
+         pii_spider/daemon)
 
 (module+ main
   (define logging-thread log-thread)
@@ -34,7 +35,9 @@
                                (log-error "Runtime Error:")
                                (log-error (exn->string e))
                                (exit 1))])
-    (crawl-postgresql settings))  
+    (if (hash-ref settings 'daemon)
+        (listen)
+        (crawl-postgresql settings)))  
   
   (thread-send logging-thread 'time-to-stop)
   (thread-wait logging-thread))
