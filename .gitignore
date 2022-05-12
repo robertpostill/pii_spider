@@ -6,4 +6,5 @@ coverage
 output
 
 pii_agent.log
+requests.log
 ignore.json
