@@ -65,10 +65,11 @@
             ([req-body (string->jsexpr original-data)]
              [original-text (hash-ref req-body 'scanData)]
              [crawler-results (crawl-text original-text (make-hash))]
+             [rules-hash (hash-from-rules-structs (examined-text-triggered-rules crawler-results))]
              [response-hash (make-hash)])
           (hash-set! response-hash 'originalData (hash-ref req-body 'scanData))
           (hash-set! response-hash 'data (examined-text-markup crawler-results))
-          (hash-set! response-hash 'rules (examined-text-triggered-rules crawler-results))
+          (hash-set! response-hash 'rules rules-hash)
           
           (response/json
            response-hash
@@ -79,4 +80,10 @@
 (define (valid-json? data)
   (with-handlers ([exn:fail:read? (lambda (e) #f)])
     (with-input-from-string data (lambda () (read-json) #t))))
+
+(define (hash-from-rules-structs rule-results)
+  (define result (make-hash))
+  (foldl (lambda (rule-result result-hash)
+           (hash-set result-hash (string->symbol (examined-data-rule rule-result)) (examined-data-matched-data rule-result)))
+         (make-immutable-hash) rule-results))
 

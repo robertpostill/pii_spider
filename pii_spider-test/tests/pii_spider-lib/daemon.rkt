@@ -48,7 +48,7 @@
                             "127.0.0.1"))                                 ; client IP
       (define result (examine mock-request))
       (check-equal? (response-code result) 200))
-    (test-case "examine returns JSON for a successful response"
+    (test-case "examine returns appropriate JSON for a successful response when there's no rules triggered"
       (define mock-request (make-request
                             #"POST"                                       ; method
                             (string->url "http://localhost:8080/examine") ; URI
@@ -60,7 +60,36 @@
                             "127.0.0.1"))                                 ; client IP
       (define result (examine mock-request))
       (check-equal? (call-with-output-bytes (response-output result))
-                    (jsexpr->bytes #hash((data . "some test data") (originalData . "some test data") (rules . ())))))
+                    (jsexpr->bytes #hash((data . "some test data") (originalData . "some test data") (rules . #hash())))))
+    (test-case "examine returns appropriate JSON for a successful response when rules are triggered"
+      (define mock-request (make-request
+                            #"POST"                                       ; method
+                            (string->url "http://localhost:8080/examine") ; URI
+                            null                                          ; headers
+                            (delay (lambda () null))                      ; body
+                            #"{\"scanData\": \"some test data robert@example.com\"}"         ; POST data
+                            "127.0.0.1"                                   ; host IP
+                            80                                            ; host PORT
+                            "127.0.0.1"))                                 ; client IP
+      (define response (examine mock-request))
+      (define result (bytes->jsexpr (call-with-output-bytes (response-output response))))
+      (check-equal? (hash-ref result 'originalData) "some test data robert@example.com")
+      (check-equal? (hash-ref (hash-ref result 'rules) (string->symbol "Email Address")) (list "robert@example.com")))
+    (test-case "examine returns appropriate JSON for a successful response when multiple rules are triggered"
+      (define mock-request (make-request
+                            #"POST"                                       ; method
+                            (string->url "http://localhost:8080/examine") ; URI
+                            null                                          ; headers
+                            (delay (lambda () null))                      ; body
+                            #"{\"scanData\": \"some test data for robert@example.com phone 0412 345 789\"}"         ; POST data
+                            "127.0.0.1"                                   ; host IP
+                            80                                            ; host PORT
+                            "127.0.0.1"))                                 ; client IP
+      (define response (examine mock-request))
+      (define result (bytes->jsexpr (call-with-output-bytes (response-output response))))
+      (check-equal? (hash-ref result 'originalData) "some test data for robert@example.com phone 0412 345 789")
+      (check-equal? (hash-ref (hash-ref result 'rules) (string->symbol "Email Address")) (list "robert@example.com"))
+      (check-equal? (hash-ref (hash-ref result 'rules) (string->symbol "AU Phone Number")) (list "0412 345 789")))
     (test-case "examine calls the crawler with the data to be examined"
       (define mock-crawler (mock #:behavior (const (examined-text "test text" null null now/moment now/moment))))
       (define mock-request (make-request
