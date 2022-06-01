@@ -10,6 +10,7 @@
          gregor
          koyo/json
          "logging.rkt"
+         "structs.rkt"
          "crawlers/text.rkt")
 
 (provide listen dispatcher 500-responder 404-responder 400-response examine valid-json?)
@@ -32,7 +33,7 @@
 (define (500-responder url ex)
   (log-error (format  "[ ~a]  ~a  --->  ~a"
                       (datetime->iso8601 (now/utc))
-                      (url->string url)
+                      (url->string url) 
                       (exn-message ex)))
   (response/json
    #hash((hasError . #t))
@@ -60,15 +61,17 @@
    (string-append "POSTed data: " original-data))
   (match (valid-json? original-data)
     [#t #:when (not (hash-has-key? (string->jsexpr original-data) 'scanData)) (400-response original-data "The scanData key can't be read from this JSON")]
-    [#t (let
+    [#t (let*
             ([req-body (string->jsexpr original-data)]
-             [result (make-hash)])
-            (crawl-text (hash-ref req-body 'scanData) (make-hash))
-          (hash-set! result 'originalData (hash-ref req-body 'scanData))
-          (hash-set! result 'data "blah")
+             [original-text (hash-ref req-body 'scanData)]
+             [crawler-results (crawl-text original-text (make-hash))]
+             [response-hash (make-hash)])
+          (hash-set! response-hash 'originalData (hash-ref req-body 'scanData))
+          (hash-set! response-hash 'data (examined-text-markup crawler-results))
+          (hash-set! response-hash 'rules (examined-text-triggered-rules crawler-results))
           
           (response/json
-           result
+           response-hash
            #:code 200
            #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))]
     [#f (400-response original-data "This data does not appear to be valid JSON")]))

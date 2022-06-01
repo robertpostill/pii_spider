@@ -4,6 +4,7 @@
          racket/port
          racket/logging
          racket/promise
+         gregor
          json
          net/url
          pii_spider/daemon
@@ -59,9 +60,9 @@
                             "127.0.0.1"))                                 ; client IP
       (define result (examine mock-request))
       (check-equal? (call-with-output-bytes (response-output result))
-                    (jsexpr->bytes #hash((data . "blah") (originalData . "some test data")))))
+                    (jsexpr->bytes #hash((data . "some test data") (originalData . "some test data") (rules . ())))))
     (test-case "examine calls the crawler with the data to be examined"
-      (define mock-crawler (mock #:behavior (const (void))))
+      (define mock-crawler (mock #:behavior (const (examined-text "test text" null null now/moment now/moment))))
       (define mock-request (make-request
                             #"POST"                                       ; method
                             (string->url "http://localhost:8080/examine") ; URI
