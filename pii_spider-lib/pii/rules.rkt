@@ -77,8 +77,7 @@
                              (for/sum ([c (in-string s)]
                                        [w (in-list magic-weights)])
                                (* (- (char->integer c) 0-code) w))
-                             11))]
-                    [_ #f]))
+                             11))]))
   result)
 
 ;; TODO have a go at medicare
