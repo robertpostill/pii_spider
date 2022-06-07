@@ -82,7 +82,6 @@
     (with-input-from-string data (lambda () (read-json) #t))))
 
 (define (hash-from-rules-structs rule-results)
-  (define result (make-hash))
   (foldl (lambda (rule-result result-hash)
            (hash-set result-hash (string->symbol (examined-data-rule rule-result)) (examined-data-matched-data rule-result)))
          (make-immutable-hash) rule-results))
