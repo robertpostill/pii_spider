@@ -2,6 +2,7 @@
 
 (require racket/match
          racket/string
+         "util.rkt"
          "../structs.rkt")
 
 (provide email au-phone-number credit-card au-tax-file-number password all-rules)
@@ -12,9 +13,9 @@
   (define simple-email-regex (pregexp "\\S+@\\S+\\.\\S+"))
   (match candidate
     [(pregexp simple-email-regex)
-     (examined-data null null rule-name (regexp-match*
-                                               simple-email-regex candidate) #t)]
-    [_ (examined-data null null rule-name null #f)]))
+     (examined-data null rule-name (add-uuids (regexp-match*
+                                               simple-email-regex candidate)) #t)]
+    [_ (examined-data null rule-name null #f)]))
 
 ;; it occurs to me that this is going to be a problem 
 (define (au-phone-number candidate)
@@ -26,12 +27,12 @@
   
   (match candidate
     [(pregexp local-regex)
-     (examined-data null null rule-name (regexp-match*
-                                               local-regex candidate) #t)]
+     (examined-data null rule-name (add-uuids (regexp-match*
+                                               local-regex candidate)) #t)]
     [(pregexp international-regex)
-     (examined-data null null rule-name (regexp-match*
-                                               international-regex candidate) #t)]
-    [_ (examined-data null null rule-name null #f)]))
+     (examined-data null rule-name (add-uuids (regexp-match*
+                                               international-regex candidate)) #t)]
+    [_ (examined-data null rule-name null #f)]))
 
 ;; Check this handy helper for more CC number formats
 ;; https://en.wikipedia.org/wiki/Payment_card_number
@@ -47,19 +48,19 @@
   (define amex-regex (pregexp "3[47]\\d{2}[\\s-]?\\d{6}[\\s-]?\\d{5}"))
   (match candidate
     [(pregexp visa-mc-regex) 
-     (examined-data null null rule-name (regexp-match* visa-mc-regex candidate) #t)]
+     (examined-data null rule-name (add-uuids (regexp-match* visa-mc-regex candidate)) #t)]
     [(pregexp amex-regex)
-     (examined-data null null rule-name (regexp-match* amex-regex candidate) #t)]
-    [_ (examined-data null null rule-name null #f)]))
+     (examined-data null rule-name (add-uuids (regexp-match* amex-regex candidate)) #t)]
+    [_ (examined-data null rule-name null #f)]))
 
 (define (au-tax-file-number candidate)
   (define rule-name "AU Tax File Number")
   (define tfn-regex (pregexp "\\b(\\d{3})\\s?(\\d{3})\\s?(\\d{3})\\b"))
   (match candidate
     [(pregexp tfn-regex) #:when (valid-tfn? candidate)
-                         (examined-data null null rule-name (filter valid-tfn? (regexp-match*
-                                                                                tfn-regex candidate))#t)]
-    [_ (examined-data null null rule-name null #f)]))
+                         (examined-data null rule-name (add-uuids (filter valid-tfn? (regexp-match*
+                                                                                      tfn-regex candidate))) #t)]
+    [_ (examined-data null rule-name null #f)]))
 
 ;; see https://www.clearwater.com.au/code/tfn for the procedure used to calculate this
 ;;;  NB there are special TFNs see https://support.yourpayroll.com.au/hc/en-au/articles/200077535-Special-Tax-File-Numbers
@@ -87,9 +88,9 @@
   (define simple-regex #px"\\b(password[:]?[\\s]+)(\\S*)\\b")
   (match candidate
     [(pregexp simple-regex)
-     (examined-data null null rule-name (pluck-passwords
-                                                simple-regex candidate) #t)]
-    [_ (examined-data null null rule-name null #f)]))
+     (examined-data null rule-name (add-uuids (pluck-passwords
+                                               simple-regex candidate)) #t)]
+    [_ (examined-data null rule-name null #f)]))
 
 (define (pluck-passwords regex candidate)
   (map (lambda (matched-data)

@@ -42,7 +42,7 @@
                           (examined-text-end-time obj)
                           (examined-text-start-time obj)))))])
 
-(struct examined-data (id reference rule matched-data rule-triggered)
+(struct examined-data (id rule matched-data rule-triggered)
   #:methods gen:custom-write
   [(define write-proc
      (make-constructor-style-printer
