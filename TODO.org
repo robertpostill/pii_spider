@@ -1,8 +1,5 @@
 * v0.2
 ** run this out of a docker container
-** Write out the results to file for JSON processing
-** Send the results to a webapp
-** Need to make a progress reporting web app
 
 * v0.3
 ** take rows in batches
@@ -24,3 +21,4 @@ the reason this is tricky is that it's a massive pot of side-effects and it uses
 ** heroicons - put in CSS folder.
 ** parse URLs for DB connections?
 does koyo have something worth looking at?
+** Write out the results to file for JSON processing
