@@ -26,8 +26,9 @@
 (define (markup-text text rule-result)
   (define matched-data (examined-data-matched-data rule-result))
   (foldl (lambda (matched-item text-to-mark)
-           (define generated-id (uuid-string))
-           (define data-to-place (string-append "[[privay:" generated-id "][" matched-item "]]"))
-           (string-replace text-to-mark matched-item data-to-place #:all? #f))
+           (let* ([generated-id (car matched-item)]
+                  [match-text (cadr matched-item)]
+                  [data-to-place (string-append "[[privay:" generated-id "][" (cadr matched-item) "]]")])
+             (string-replace text-to-mark match-text data-to-place #:all? #f)))
          text
          matched-data))

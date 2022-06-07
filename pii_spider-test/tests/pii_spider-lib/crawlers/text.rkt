@@ -31,14 +31,6 @@
       (define result (examined-text-triggered-rules
                       (crawl-text "test data robert@test.com roberta@test.com" (make-hash))))
       (check-equal? (length result) 1))
-    (test-case "returns the matched emails"
-      (define expected-result '("robert@test.com" "roberta@test.com"))
-      (define result (flatten
-                      (map examined-data-matched-data
-                           (examined-text-triggered-rules
-                            (crawl-text "test data robert@test.com roberta@test.com"
-                                        (make-hash))))))
-      (check-equal? result expected-result))
     (test-case "returns text containing the results of the scan"
       (define expected-result "some text")
       (check-equal? (examined-text-markup (crawl-text "some text" (make-hash))) expected-result))
