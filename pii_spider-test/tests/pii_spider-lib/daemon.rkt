@@ -76,8 +76,8 @@
       (define response (examine mock-request))
       (define result (bytes->jsexpr (call-with-output-bytes (response-output response))))
       (check-equal? (hash-ref result 'originalData) "some test data robert@example.com")
-      (check-equal? (cadr (flatten (hash-ref (hash-ref result 'rules) (string->symbol "Email Address")))) "robert@example.com")
-      (check-true (uuid-string? (car (flatten (hash-ref (hash-ref result 'rules) (string->symbol "Email Address")))))))
+      (check-equal? (hash-values (hash-ref (hash-ref result 'rules) (string->symbol "Email Address"))) '("robert@example.com"))
+      (check-true (uuid-symbol? (car (hash-keys (hash-ref (hash-ref result 'rules) (string->symbol "Email Address")))))))
     (test-case "examine returns appropriate JSON for a successful response when multiple rules are triggered"
       (define mock-request (make-request
                             #"POST"                                       ; method
@@ -91,8 +91,8 @@
       (define response (examine mock-request))
       (define result (bytes->jsexpr (call-with-output-bytes (response-output response))))
       (check-equal? (hash-ref result 'originalData) "some test data for robert@example.com phone 0412 345 789")
-      (check-equal? (cadr (flatten (hash-ref (hash-ref result 'rules) (string->symbol "Email Address")))) "robert@example.com")
-      (check-equal? (cadr (flatten (hash-ref (hash-ref result 'rules) (string->symbol "AU Phone Number")))) "0412 345 789"))
+      (check-equal? (hash-values (hash-ref (hash-ref result 'rules) (string->symbol "Email Address"))) '("robert@example.com"))
+      (check-equal? (hash-values (hash-ref (hash-ref result 'rules) (string->symbol "AU Phone Number"))) '("0412 345 789")))
     (test-case "examine calls the crawler with the data to be examined"
       (define mock-crawler (mock #:behavior (const (examined-text "test text" null null now/moment now/moment))))
       (define mock-request (make-request

@@ -11,6 +11,7 @@
          koyo/json
          "logging.rkt"
          "structs.rkt"
+         "util.rkt"
          "crawlers/text.rkt")
 
 (provide listen dispatcher 500-responder 404-responder 400-response examine valid-json?)
@@ -65,7 +66,7 @@
             ([req-body (string->jsexpr original-data)]
              [original-text (hash-ref req-body 'scanData)]
              [crawler-results (crawl-text original-text (make-hash))]
-             [rules-hash (hash-from-rules-structs (examined-text-triggered-rules crawler-results))]
+             [rules-hash (jsexpr-from-rules-structs (examined-text-triggered-rules crawler-results))]
              [response-hash (make-hash)])
           (hash-set! response-hash 'originalData (hash-ref req-body 'scanData))
           (hash-set! response-hash 'data (examined-text-markup crawler-results))
@@ -77,12 +78,4 @@
            #:headers (list (header #"Access-Control-Allow-Origin" #"http://localhost:3000"))))]
     [#f (400-response original-data "This data does not appear to be valid JSON")]))
 
-(define (valid-json? data)
-  (with-handlers ([exn:fail:read? (lambda (e) #f)])
-    (with-input-from-string data (lambda () (read-json) #t))))
-
-(define (hash-from-rules-structs rule-results)
-  (foldl (lambda (rule-result result-hash)
-           (hash-set result-hash (string->symbol (examined-data-rule rule-result)) (examined-data-matched-data rule-result)))
-         (make-immutable-hash) rule-results))
 
